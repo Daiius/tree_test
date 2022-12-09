@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import TreeItem from '@mui/lab/TreeItem';
-import TreeView from '@mui/lab/TreeView';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import TextField from '@material-ui/core/TextField';
+import TreeItem from '@material-ui/lab/TreeItem';
+import TreeView from '@material-ui/lab/TreeView';
 
 import { v4 as uuid } from 'uuid';
 
@@ -111,42 +110,42 @@ const TreeNodeComponent = (props: TreeNodeComponentProps) => {
 
   return useMemo(() => (
     <TreeItem nodeId={tree.id} label={`${nodeToDepthName(tree)} ${nodeToDescendantInfo(tree)}`}
-              sx={{background: nodeToColor(tree), ml: 1.5}}>
-      <Stack direction="row" spacing={2}>
-        <Stack direction="column">
+              >
+      <div style={{display: "flex"}}>
+        <div>
           {tree.properties != null &&
             Object.entries(tree.properties).map(([key, value]) =>
-                <TextField label={key} key={"textfield-treeitem-properties-"+key} sx={{p: 1}}
+                <TextField label={key} key={"textfield-treeitem-properties-"+key}
                            value={value} onChange={handleChange(key)}
                            size="small"/>
               )
           }
-          <Stack direction="row" justifyContent="stretch">
+          <div style={{display: "flex"}}>
             <Button size="small" onClick={handleAddChild(tree)} variant="outlined" fullWidth>
               次工程の追加
             </Button>
             {removeTree &&
-              <Button onClick={() => removeTree()} variant="outlined" color="error">削除</Button>
+              <Button onClick={() => removeTree()} variant="outlined">削除</Button>
             }
-          </Stack>
-        </Stack>
+          </div>
+        </div>
         {tree.evaluations.map((evaluation, index) =>
-          <Stack key={"evaluations-stack-"+tree.id+"-"+index} direction="column" justifyContent="flex-start">
+          <div key={"evaluations-stack-"+tree.id+"-"+index}>
             {Object.entries(evaluation).map(([key, value]) =>
-              <TextField label={key} key={"textfield-treeitem-evaluations-"+key} sx={{p: 1}}
+              <TextField label={key} key={"textfield-treeitem-evaluations-"+key}
                          value={value} onChange={handleChange(key)}
                          size="small"/>
             )}
             <Button variant="outlined" onClick={deleteEvaluation(index)}
-                    size="small" color="error">
+                    size="small">
               評価の削除
             </Button>
-          </Stack>
+          </div>
         )}
-        <Button sx={{height: 40}} size="small" variant="outlined" onClick={addEvaluation}>
+        <Button style={{height: "40px"}} size="small" variant="outlined" onClick={addEvaluation}>
           評価の追加
         </Button>
-      </Stack>
+      </div>
       {tree.children.map((node, idx) => (
         <TreeNodeComponent
           key={node.id}
@@ -182,14 +181,13 @@ const MainContainer = () => {
     setExpanded(ids);
   }, []);
 
-  const handleToggle = (e: React.SyntheticEvent, nodeIds: string[]) => {
+  const handleToggle = (e: React.ChangeEvent<{}>, nodeIds: string[]) => {
     console.log("handleToggle", nodeIds);
     setExpanded(nodeIds);
   };
 
   return (
     <TreeView
-      aria-label="test-treeview"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpanded={['root']}
       defaultExpandIcon={<ChevronRightIcon />}
