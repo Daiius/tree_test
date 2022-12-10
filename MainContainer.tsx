@@ -108,7 +108,7 @@ const TreeNodeComponent = (props: TreeNodeComponentProps) => {
     }
   };
 
-  return useMemo(() => (
+  return (
     <TreeItem nodeId={tree.id} label={`${nodeToDepthName(tree)} ${nodeToDescendantInfo(tree)}`}
               >
       <div style={{display: "flex"}}>
@@ -164,7 +164,7 @@ const TreeNodeComponent = (props: TreeNodeComponentProps) => {
           />
       ))}
     </TreeItem>
-  ), [props]);
+  );
 };
 
 const MainContainer = () => {
