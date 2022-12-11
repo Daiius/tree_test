@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import TreeItem from '@mui/lab/TreeItem';
-import TreeView from '@mui/lab/TreeView';
+import Button from 'react-bootstrap/Button';
+import Stack from 'react-bootstrap/Stack';
+import FloatingLabel from 'react-bootstrap/FloatingLabel';
+import Form from 'react-bootstrap/Form';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 
 import { v4 as uuid } from 'uuid';
 
 import { TreeNode, search, listIds, hasChild } from './tree';
+
+import TreeView from './TreeView';
+
+import SimpleTree, { SimpleNode } from './SimpleTree';
 
 const checkDepthForward = (node: TreeNode): number => {
   if (node.children.length <= 0) return 0;
@@ -58,12 +60,10 @@ type TreeNodeComponentProps = {
   tree: TreeNode,
   setTree: (nodes: TreeNode) => void,
   removeTree: (() => void) | null,
-  expanded: string[],
-  setExpanded: (expanded: string[]) => void,
 }
 
 const TreeNodeComponent = (props: TreeNodeComponentProps) => {
-  const {tree, setTree, removeTree, expanded, setExpanded} = props;
+  const {tree, setTree, removeTree} = props;
 
   console.log(`<TreeNodeComponent tree.id=${tree.id}>`);
 
@@ -97,7 +97,6 @@ const TreeNodeComponent = (props: TreeNodeComponentProps) => {
       }
     };
     setTree(go(tree) || tree);
-    setExpanded([...expanded, newId]);
   };
 
   const handleChange = (key: string) =>
@@ -109,63 +108,81 @@ const TreeNodeComponent = (props: TreeNodeComponentProps) => {
     }
   };
 
-  return useMemo(() => (
-    <TreeItem nodeId={tree.id} label={`${nodeToDepthName(tree)} ${nodeToDescendantInfo(tree)}`}
-              sx={{background: nodeToColor(tree), ml: 1.5}}>
-      <Stack direction="row" spacing={2}>
-        <Stack direction="column">
-          {tree.properties != null &&
-            Object.entries(tree.properties).map(([key, value]) =>
-                <TextField label={key} key={"textfield-treeitem-properties-"+key} sx={{p: 1}}
-                           value={value} onChange={handleChange(key)}
-                           size="small"/>
-              )
+const nodeToComponent = (node: TreeNode) => {
+
+  return (
+    <>
+      {node.id}
+      <Stack direction="horizontal" gap={2}>
+        <Stack className="stack-conditions" direction="vertical">
+          {node.properties != null &&
+            Object.entries(node.properties).map(([key, value]) =>
+              <FloatingLabel controlId="floatingInput" label={key}>
+                <Form.Control type="text" key={"textfield-nodeitem-properties-"+key}
+                              placeholder={key} value={value} onChange={handleChange(key)}
+                              />
+              </FloatingLabel>)
           }
-          <Stack direction="row" justifyContent="stretch">
-            <Button size="small" onClick={handleAddChild(tree)} variant="outlined" fullWidth>
+          <Stack direction="horizontal">
+            <Button size="sm" onClick={handleAddChild(node)} variant="outline-primary">
               次工程の追加
             </Button>
             {removeTree &&
-              <Button onClick={() => removeTree()} variant="outlined" color="error">削除</Button>
+              <Button onClick={() => removeTree()} variant="outline-primary">削除</Button>
             }
           </Stack>
         </Stack>
-        {tree.evaluations.map((evaluation, index) =>
-          <Stack key={"evaluations-stack-"+tree.id+"-"+index} direction="column" justifyContent="flex-start">
+        {node.evaluations.map((evaluation, index) =>
+          <Stack key={"evaluations-stack-"+node.id+"-"+index} direction="vertical"
+                 className="stack-evaluations">
             {Object.entries(evaluation).map(([key, value]) =>
-              <TextField label={key} key={"textfield-treeitem-evaluations-"+key} sx={{p: 1}}
-                         value={value} onChange={handleChange(key)}
-                         size="small"/>
+              <FloatingLabel label={key}>
+                <Form.Control key={"textfield-nodeitem-evaluations-"+key}
+                              value={value} onChange={handleChange(key)}
+                              placeholder={key}/>
+              </FloatingLabel>
             )}
-            <Button variant="outlined" onClick={deleteEvaluation(index)}
-                    size="small" color="error">
+            <Button variant="outline-primary" onClick={deleteEvaluation(index)}>
               評価の削除
             </Button>
           </Stack>
         )}
-        <Button sx={{height: 40}} size="small" variant="outlined" onClick={addEvaluation}>
+        <Button size="sm" variant="outline-primary" onClick={addEvaluation}>
           評価の追加
         </Button>
       </Stack>
-      {tree.children.map((node, idx) => (
-        <TreeNodeComponent
-          key={node.id}
-          tree={node}
-          setTree={ (newSubtree) => {
-            const newChildren = [...tree.children];
-            newChildren[idx] = newSubtree;
-            setTree({...tree, children: newChildren});
-          } }
-          removeTree={ () => {
-            const newChildren = tree.children.slice(0, idx).concat(tree.children.slice(idx + 1));
-            setTree({...tree, children: newChildren});
-          } }
-          expanded={expanded}
-          setExpanded={setExpanded}
-          />
-      ))}
-    </TreeItem>
-  ), [props]);
+      <ul>
+        <li>{node.children.map((child) => nodeToComponent(child))}</li>
+      </ul>
+    </>
+  );
+};
+
+  return nodeToComponent(tree);
+
+  //return useMemo(() => (
+  //  <TreeItem nodeId={tree.id} label={`${nodeToDepthName(tree)} ${nodeToDescendantInfo(tree)}`}
+  //            sx={{background: nodeToColor(tree), ml: 1.5}}>
+  //    
+  //    {tree.children.map((node, idx) => (
+  //      <TreeNodeComponent
+  //        key={node.id}
+  //        tree={node}
+  //        setTree={ (newSubtree) => {
+  //          const newChildren = [...tree.children];
+  //          newChildren[idx] = newSubtree;
+  //          setTree({...tree, children: newChildren});
+  //        } }
+  //        removeTree={ () => {
+  //          const newChildren = tree.children.slice(0, idx).concat(tree.children.slice(idx + 1));
+  //          setTree({...tree, children: newChildren});
+  //        } }
+  //        expanded={expanded}
+  //        setExpanded={setExpanded}
+  //        />
+  //    ))}
+  //  </TreeItem>
+  //), [props]);
 };
 
 const MainContainer = () => {
@@ -175,36 +192,43 @@ const MainContainer = () => {
     properties: {"test": "property"}, evaluations: [{"test": "evaluation"}]
     });
 
-  const [expanded, setExpanded] = useState(["0"]);
-
-  useEffect(()=>{
-    const ids = listIds(tree);
-    setExpanded(ids);
-  }, []);
-
-  const handleToggle = (e: React.SyntheticEvent, nodeIds: string[]) => {
-    console.log("handleToggle", nodeIds);
-    setExpanded(nodeIds);
-  };
+  const simpleData = { id: "root", text: "This is root", children: [
+    { id: "child1", text: "This is child1", children: []},
+    { id: "child2", text: "This is child2", children: [
+      { id: "child3", text: "This is child3", children: []}
+    ]},
+    { id: "child4", text: "This is child4", children: []}
+  ]};
 
   return (
-    <TreeView
-      aria-label="test-treeview"
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpanded={['root']}
-      defaultExpandIcon={<ChevronRightIcon />}
-      expanded={expanded} onNodeToggle={handleToggle}
-    >
-      <Button variant="outlined">書き込み</Button>
-      <TreeNodeComponent
-        tree={tree}
-        setTree={setTree}
-        removeTree={null}
-        expanded={expanded}
-        setExpanded={setExpanded}
-        />
-    </TreeView>
-  );
+    <Tabs defaultActiveKey="main" id="contents-tabs">
+      <Tab eventKey="main" title="Main">
+        <TreeNodeComponent tree={tree}
+                           setTree={ (newSubtree) => {
+                             const idx = 0;
+                             const newChildren = [...tree.children];
+                             newChildren[idx] = newSubtree;
+                             setTree({...tree, children: newChildren});
+                           } }
+                           removeTree={ () => {
+                             const idx = 0;
+                             const newChildren = tree.children
+                                     .slice(0, idx).concat(tree.children
+                                     .slice(idx + 1));
+                             setTree({...tree, children: newChildren});
+                           } }
+                           />
+      </Tab>
+      <Tab eventKey="simple" title="Simple">
+        <div>simple tree test</div>
+        <ul>
+          <SimpleTree node={simpleData} nodeToComponent={(node: SimpleNode)=>(
+            <div>{node.text}</div>
+          )}/>
+        </ul>
+      </Tab>
+    </Tabs>
+   );
 };
 
 export default MainContainer;
